@@ -1,6 +1,16 @@
 import React from 'react';
 import './App.css';
 import {useState, useEffect} from 'react';
+import { Stage, Container } from '@inlet/react-pixi';
+import Tile from './components/Tile';
+
+interface RectangleProps {
+  x: number
+  y: number
+  width: number
+  height: number
+  color: number
+}
 
 function App() {
   const [data, setData] = useState([
@@ -14,6 +24,15 @@ function App() {
     '╻┗┓╺╸┗━┏'
   ]);
 
+  // ┏━╸┏╸╻┏╸
+  // ┣╸╺╋┳┛┃╻
+  // ┗┓┏┛┃╻┃┃
+  // ╻┣┫╻╹┃┣┛
+  // ┃╹┣┫╻┣┻╸
+  // ┗┓┃┗┻┫╻╻
+  // ┏┫┣┓┏╋┛┃
+  // ╹┗┛╹╹┗━┛
+
   // type Cell =
   //   '┛' | '┗' | '┏' | '┓' |
   //   '┃' | '━' |
@@ -26,67 +45,82 @@ function App() {
   const dict: any = {
     '┛': {
       'image': 'angle',
-      'rotate': 0
+      'rotate': 0,
+      'turnTo': '┗',
     },
     '┗': {
       'image': 'angle',
-      'rotate': 90
+      'rotate': 90,
+      'turnTo': '┏',
     },
     '┏': {
       'image': 'angle',
-      'rotate': 180
+      'rotate': 180,
+      'turnTo': '┓',
     },
     '┓': {
       'image': 'angle',
-      'rotate': 270
+      'rotate': 270,
+      'turnTo': '┛',
     },
 
     '┃': {
       'image': 'two_sides',
-      'rotate': 0
+      'rotate': 0,
+      'turnTo': '━',
     },
     '━': {
       'image': 'two_sides',
-      'rotate': 90
+      'rotate': 90,
+      'turnTo': '┃',
     },
 
     '╻': {
       'image': 'one_side',
-      'rotate': 0
+      'rotate': 0,
+      'turnTo': '╸',
     },
     '╸': {
       'image': 'one_side',
-      'rotate': 90
+      'rotate': 90,
+      'turnTo': '╹',
     },
     '╹': {
       'image': 'one_side',
-      'rotate': 180
+      'rotate': 180,
+      'turnTo': '╺',
     },
     '╺': {
       'image': 'one_side',
-      'rotate': 270
+      'rotate': 270,
+      'turnTo': '╻',
     },
 
     '┫': {
       'image': 'three_sides',
-      'rotate': 0
+      'rotate': 0,
+      'turnTo': '┻',
     },
     '┻': {
       'image': 'three_sides',
-      'rotate': 90
+      'rotate': 90,
+      'turnTo': '┣',
     },
     '┣': {
       'image': 'three_sides',
-      'rotate': 180
+      'rotate': 180,
+      'turnTo': '┳',
     },
     '┳': {
       'image': 'three_sides',
-      'rotate': 270
+      'rotate': 270,
+      'turnTo': '┫',
     },
 
     '╋': {
       'image': 'four_sides',
-      'rotate': 0
+      'rotate': 0,
+      'turnTo': '╋',
     }
   };
 
@@ -98,28 +132,41 @@ function App() {
   }, [data]);
 
   useEffect(() => {
-    debugger
     console.log('preparedData', preparedData);
   }, [preparedData]);
 
-  const handleClick = (i: number, j: number) => {
-    debugger
-  }
+  const handleMouseDown = (i: number, j: number) => {
+    const nextCell = dict[preparedData[i][j].turnTo];
+    setPreparedData(preparedData.map((line: any[], l: number) => 
+      line.map((cell: any, c: number) => 
+        (i === l) && (j === c)
+          ? nextCell
+          : cell
+        )
+      )
+    );
+  };
 
   return (
     <div className="App">
-      {preparedData.map((line: any[], i: number) => 
-        <div className="line" key={i}>
-          {line && line.map && line.map((cell: any, j: number) => (
-            <img
-              alt=""
-              key={`${i}-${j}-cell`}
-              src={`tiles/${cell.image}.svg`}
-              style={{transform: `rotate(${cell.rotate}deg)`}}
-              onClick={() => handleClick(i, j)}/>
-          ))}
-        </div>
-      )}
+      <Stage
+        width={900}
+        height={900}
+        options={{backgroundColor: 0xffffff }}>
+        <Container x={0} y={0}>
+          {preparedData.map((line: any[], i) => 
+            line.map((cell: any, j: number) => (
+              <Tile
+                cell={cell}
+                i={i}
+                j={j}
+                key={`${i}-${j}-cell`}
+                handleMouseDown={handleMouseDown}
+              />
+            ))
+          )}
+        </Container>
+      </Stage>
     </div>
   );
 }
