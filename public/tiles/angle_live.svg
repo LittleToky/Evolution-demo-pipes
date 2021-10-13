@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 21.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Слой_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 100 100" style="enable-background:new 0 0 100 100;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#142D44;stroke:#000000;stroke-miterlimit:10;}
+	.st1{fill:#A6EDE1;stroke:#000000;stroke-miterlimit:10;}
+	.st2{fill:#827F7F;stroke:#000000;stroke-miterlimit:10;}
+	.st3{fill:#31CBDB;stroke:#000000;stroke-miterlimit:10;}
+	.st4{fill:#95E1E5;}
+	.st5{fill:#F2BBC8;}
+</style>
+<path class="st0" d="M49.5,32.5c-9.4,0-17,7.6-17,17s7.6,17,17,17s17-7.6,17-17S58.9,32.5,49.5,32.5z M49.5,62.5
+	c-7.2,0-13-5.8-13-13s5.8-13,13-13s13,5.8,13,13S56.7,62.5,49.5,62.5z"/>
+<path class="st1" d="M66.5,49.5v52h-34v-52c0,9.4,7.6,17,17,17S66.5,58.9,66.5,49.5z"/>
+<path class="st1" d="M49.5,32.5h-52v34h52c-9.4,0-17-7.6-17-17S40.1,32.5,49.5,32.5z"/>
+<circle class="st2" cx="49.5" cy="49.5" r="13"/>
+<g>
+	<circle class="st3" cx="49.5" cy="49.5" r="13"/>
+	<circle class="st4" cx="49.2" cy="49.2" r="7.8"/>
+	<circle class="st5" cx="49.2" cy="49.2" r="3.8"/>
+</g>
+</svg>
