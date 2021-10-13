@@ -4,13 +4,13 @@ import {useState, useEffect} from 'react';
 import { Stage, Container } from '@inlet/react-pixi';
 import Tile from './components/Tile';
 
-interface RectangleProps {
-  x: number
-  y: number
-  width: number
-  height: number
-  color: number
-}
+// interface RectangleProps {
+//   x: number
+//   y: number
+//   width: number
+//   height: number
+//   color: number
+// }
 
 function App() {
   const [data, setData] = useState([
@@ -134,6 +134,26 @@ function App() {
   useEffect(() => {
     console.log('preparedData', preparedData);
   }, [preparedData]);
+
+  useEffect(() => {
+    const worker = new Worker('/socketWorker.js');
+
+    worker.onmessageerror = err => {
+      debugger
+      //console.error('centralSW error: ', err.message);
+      //worker.terminate();
+    };
+
+    worker.onmessage = e => {
+      console.log(e);
+      setData(e.data.split('\n').slice(1));
+    };
+
+    // return () => {
+    //   //close connection;
+    //   worker.terminate();
+    // }
+  }, []);
 
   const handleMouseDown = (i: number, j: number) => {
     const nextCell = dict[preparedData[i][j].turnTo];
