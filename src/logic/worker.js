@@ -17,4 +17,4 @@ export const launchWorker = (onMessage, level) => { // onMessage is func from Re
 };
 
 export const sendMessage = message => worker.postMessage(message); // React app calls sendMessage to send message to worker or worker -> server
-// message should be {message: 'string', forWorker: true | false} - if (forWorker) message is for worker, not server
+// message should be {message: 'string'}

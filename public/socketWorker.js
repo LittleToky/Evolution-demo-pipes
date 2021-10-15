@@ -37,13 +37,7 @@ setInterval(ping, 500);
 
 self.onmessage = (e) => {
   // outcoming message (to server)
-  // check if message is for worker
   const {data} = e;
-  if (data.forWorker) {
-    debugger
-
-    return;
-  }
 
   if (ws && ws.readyState === ws.OPEN) {
     ws.send(data.message);

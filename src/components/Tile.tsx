@@ -2,14 +2,14 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Sprite } from '@inlet/react-pixi';
 
-const tileSize = 30;
-
 const Tile = (props:any) => {
 
   const [alive, setAlive] = useState(false);
+  const [tileSize, setTileSize] = useState(false);
 
   useEffect(() => {
     setAlive(props.liveMap[props.i][props.j]);
+    setTileSize(props.tileSize);
   },[props]);
   // here I use two sprites just because I supouse we will need it to do beautiful animations and avoid blinking on image onload
   return (

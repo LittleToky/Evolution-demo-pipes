@@ -1,9 +1,51 @@
 .App {
   /* text-align: center; */
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
 }
 
-p {
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+p.button {
   display: inline-block;
-  padding: 0;
-  margin: 0;
+  padding: 0 5px;
+  margin: 5px 3px 10px;
+}
+
+.stage-wrapper {
+  flex-grow: 1;
+  overflow: scroll;
+  height: 100vh;
+}
+
+.side-panel {
+  height: 100vh;
+  padding: 0 2rem;
+  display: inline-flex;
+  flex-grow: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #EEEEEE;
+}
+
+.button {
+  background-color: #ccc;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.level-select {
+  text-align: center;
+  min-width: 20px;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 70%;
 }

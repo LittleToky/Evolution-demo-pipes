@@ -190,7 +190,6 @@ export const CELLS: (key: string) => Cell = {
 
 export const dataToCell = (i: number, j: number, key: string) => {
   const cell = CELLS[key];
-  console.log(key, cell.self);
   return {...cell, coords : [j, i]}
 };
 
@@ -206,6 +205,7 @@ export const getNeighbourCellData = (coords: Vector2, data: Cell[][], liveData:B
   return {
     neighbourCell,
     alive: neighbourCell ? liveData[newY][newX] : false,
-    responsing
+    responsing,
+    neighbourCoords: [newX, newY]
   }
 }

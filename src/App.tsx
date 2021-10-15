@@ -7,13 +7,31 @@ import { Cell, Vector2, dataToCell, getNeighbourCellData } from './logic';
 import { terminateWorker, launchWorker, sendMessage } from './logic/worker.js'
 
 function App() {
-  const [data, setData] = useState(['']);
-  const [preparedData, setPreparedData] = useState<Cell[][]>([[]]);
-  const [liveMap, setLiveMap] = useState<Boolean[][]>([[]]);
-  const [level, setLevel] = useState(2);
-  const [loading, setLoading] = useState(true);
-  const [win, setWin] = useState(null);
-  const [winLevel, setWinLevel] = useState(1);
+  const [data, setData] = useState(['']); // data almost like it comes from server
+  const [preparedData, setPreparedData] = useState<Cell[][]>([[]]); // turn data in object with all additional data
+  const [liveMap, setLiveMap] = useState<Boolean[][]>([[]]); // table of same size as preparedData - shows alive cells (connected to currently selected)
+  const [level, setLevel] = useState(1); // level number to request on bext <<reset>>
+  const [loading, setLoading] = useState(true); // don't show sprites while data is not ready
+  const [win, setWin] = useState(null); // last received pwd
+  const [winLevel, setWinLevel] = useState(1); // number of level where last pwd received
+  const tileSize = 30;
+  const [size, setSize] = useState([tileSize *  9, tileSize * 10]); // canvas size
+  const [pending, setPending] = useState(false); // 
+  const [readyToVerify, setReadyToVerify] = useState(false); // block <<verify>> at list while there are not alive cells i.e not connected
+  const [requestQueue, setRequestQueue] = useState([]);
+
+  useEffect(() => {
+    const message = requestQueue[0];
+    if (!pending && message) {
+      setPending(true);
+      setRequestQueue(requestQueue.splice(1));
+      sendMessage(message);
+    }
+  }, [pending, requestQueue]);
+
+  useEffect(() => { // check if all cells are alive
+    setReadyToVerify(liveMap.every(line => line.every(alive => alive)));
+  }, [liveMap])
 
   useEffect(() => {
     if (preparedData.length === 1) { // initial game data or after reset;
@@ -29,33 +47,39 @@ function App() {
       setPreparedData(newPreparedData);
     } else {
       // this map came after we turned tile,
-      // we should check if it corresponds preparedData
-      console.log('from server:', data);
+      // we should check if it corresponds preparedDat
       if (data.length === 1) return
       preparedData.map((line, i) => line.map((cell, j) => cell.self !== data[i][j]))
       const linesFromState = preparedData.map(line => line.map(cell => cell.self).join(''));
       if (preparedData.find((line, i) => line.find((cell, j) => cell.self !== data[i][j]))) {
-        debugger
-      } else {
-        console.log('checked');
+        // console.log(data);
+        // console.log(linesFromState);
+        resetData();
+        sendMessage({message, map});
       }
-      
+      // else {
+      //   console.log('checked');
+      // }
     }
   }, [data]);
 
-  useEffect(() => {
-    setLoading(false);
-    console.log('preparedData', preparedData);
-  }, [preparedData]);
+  useEffect(() => {setLoading(false)}, [preparedData]);
 
   useEffect(() => {
     launchWorker(onMessage, level);
-    return terminateWorker;
+    return () => {
+      resetData();
+      terminateWorker();
+    }
   }, []);
 
   const onMessage = (message) => {
     if (message.startsWith('map:')) { // set game data
-      setData(message.split('\n').slice(1));
+      let newData = message.split('\n').slice(1).filter(line => line !== '');
+      setData(newData);
+      setSize([(newData.length + 1) * tileSize , (newData[0].length + 1) * tileSize]);
+      setPending(false);
+      // there should be checks for empty lines.
     } else if (message.startsWith('verify:')) {
       //"verify: Correct! Password: JustWarmingUp"
       const temp = message.split('Password: ');
@@ -63,14 +87,9 @@ function App() {
         setWin(temp[1]);
         setWinLevel(level);
         setLevel(level+1);
-        setLoading(true);
-        sendMessage(`new ${level+1}`);
-      } else {
-        setWin(null);
-        setWinLevel(level);
+        resetData();
+        sendMessage({message: `new ${level+1}`});
       }
-    } else {
-      debugger
     }
   };
 
@@ -80,7 +99,7 @@ function App() {
     newLiveMap[affectedI][affectedJ] = true;
 
     affectedCell.connections.forEach((vector: Vector2) => {
-      const {neighbourCell, alive, responsing} = getNeighbourCellData(affectedICoords, newPreparedData, newLiveMap, vector);
+      const {neighbourCell, alive, responsing, neighbourCoords} = getNeighbourCellData(affectedICoords, newPreparedData, newLiveMap, vector);
       
       if (neighbourCell) {
         if (!alive) {
@@ -90,8 +109,15 @@ function App() {
             notConnectedNeighbours.push(neighbourCell);
             bouncing.push(affectedCell);
           }
+        } else if (!responsing) {
+          bouncing.push(affectedCell);
         }
+      } else {
+        const [x, y] = neighbourCoords;
+        if ((x < 0) || (x >= preparedData[0].lenght) || (y < 0) || (y >= preparedData.length)) bouncing.push(affectedCell);
       }
+
+
     });
   };
 
@@ -101,8 +127,9 @@ function App() {
     let newLiveMap = [...liveMap];
 
     if (!noTurn) {
+      const message = {message: `rotate ${coords[0]} ${coords[1]}`}
       // rotate cell
-      sendMessage({message: `rotate ${coords[0]} ${coords[1]}`});
+
       const nextCell = dataToCell(i, j, preparedData[i][j].turnTo);
       newPreparedData = preparedData.map((line: Cell[], l: number) => 
         line.map((cell: Cell, c: number) => 
@@ -111,6 +138,7 @@ function App() {
             : cell
         )
       );
+      setRequestQueue([...requestQueue, message]);
     }
 
     // kill all cells before next calculations
@@ -126,6 +154,14 @@ function App() {
     setLiveMap(newLiveMap);
   };
 
+  const resetData = () => {
+    setLoading(true);
+    setPreparedData([[]])
+    setData(['']);
+    setLiveMap([[]]);
+    setReadyToVerify(false);
+  }
+
   const solve = () => {
     let initialCell: Cell | undefined;
     for (let l = 4; l > 2; l--) {
@@ -139,8 +175,6 @@ function App() {
 
     if (initialCell) {
       const coords = initialCell.coords;
-      // let newData = preparedData;
-      // newData = setAlive(newData, coords[1], coords[0]);
       let notConnectedNeighbours: Cell[] = [];
       let bouncing : Cell[] = [];
       let turned = false;
@@ -151,13 +185,9 @@ function App() {
         if (liveMap[cell.coords[1]][cell.coords[0]]) return
         turned = true;
         handleMouseDown(cell.coords, false, notConnectedNeighbours, bouncing);
-        //debugger
       });
 
       if (!turned) {
-        console.log(bouncing);
-        //debugger
-        
         const cell = bouncing[0];
         if (cell) {
           
@@ -166,82 +196,30 @@ function App() {
             setAlive(preparedData, liveMap, cell.coords, notConnectedNeighbours, bouncing)
           });
         } else {
-          //debugger
-          const bouncing = [];
-          liveMap.forEach((line, i) => {
-            line.forEach((isAlive, j) => {
-              if (isAlive) {
-
-                preparedData[i][j].connections.forEach((vector: Vector2) => {
-                  const {neighbourCell, alive, responsing} = getNeighbourCellData([j, i], preparedData, liveMap, vector);
-                  // if (neighbourCell) {
-                  //   //
-                  // }
-                  // const [x, y] = vector;
-                  // const [newX, newY] = [j + x, i - y]; // neighbour cell coords 
-                  // const neighbourLine = preparedData[newY];
-                  // if (neighbourLine && neighbourLine[newX]) {
-                  //   // if (!newLiveMap[newY][newX]) {
-                  //   //   const neighbourCell = neighbourLine[newX];
-                  //   //   const reverseConnection = neighbourCell.connections.find(([xTemp, yTemp]) => (xTemp === -x) && (yTemp === -y))
-                      
-                  //   //   if (reverseConnection) setAlive(newPreparedData, newLiveMap, newY, newX, notConnectedNeighbours, bouncing);
-                  //   //   else {
-                  //   //     notConnectedNeighbours.push(neighbourCell);
-                  //   //     bouncing.push(affectedCell);
-                  //   //   }
-                  //   // }
-                  // } else {
-                  //   //debugger
-                  //   if (newX >= 0 && newX < 9 && y >= 0 && y<= 0) {
-                  //     debugger
-                  //   }
-                  // }
-                });
-              }
-            });
-          });
+          // solver is not ready yet
+          // there should be rest of it
         }
       }
-    } else {
-      debugger
     }
-
-    
   };
 
   const reset = () => {
-    setLoading(true);
-    setPreparedData([[]])
-    setData(['']);
-    setLiveMap([[]]);
+    resetData();
     sendMessage({message: `new ${level}`});
   }
 
   return (
     <div className="App">
-      <div className="side-panel">
-        <div>select level: <p onClick={() => setLevel(level - 1)}>-</p>{level}<p onClick={() => setLevel(level + 1)}>+</p></div>
-        {win && (
-          <>
-            <div>last win level: {winLevel}</div>
-            <div>password: {win}</div>
-          </>
-        )}
-        <div onClick={solve}>solve</div>
-        <div onClick={() => sendMessage({message: `verify`})}>verify</div>
-        {/* <div onClick={() => sendMessage({message: `map`})}>map</div> */}
-        <div onClick={reset}>reset</div>
-      </div>
-      <div className="stage-wrapper">
+      <div className={`stage-wrapper${pending ? ' disabled' : ''}`}>
         <Stage
-          width={900}
-          height={900}
+          width={size[0]}
+          height={size[1]}
           options={{backgroundColor: 0xffffff }}>
           <Container x={0} y={0}>
             {!loading && preparedData.map((line: Cell[], i) => 
               line.map((cell: Cell, j: number) => (
                 <Tile
+                  tileSize={tileSize}
                   cell={cell}
                   liveMap={liveMap}
                   i={i}
@@ -253,6 +231,20 @@ function App() {
             )}
           </Container>
         </Stage>
+      </div>
+      <div className="side-panel">
+        <div className="level-select">select level:
+          <br/><p onClick={() => setLevel(level - 1 || 1)} className="button">-</p>{level}<p className="button" onClick={() => setLevel(level + 1)}>+</p>
+        </div>
+        {win && (
+          <>
+            <div>last win level: {winLevel}</div>
+            <div>password: {win}</div>
+          </>
+        )}
+        <div onClick={solve} className={`button${pending ? ' disabled' : ''}`} >solve</div>
+        <div onClick={() => sendMessage({message: `verify`})} className={`button${readyToVerify ? '' : ' disabled'}`} >verify</div>
+        <div onClick={reset} className="button">reset</div>
       </div>
     </div>
   );
