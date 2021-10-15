@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Pipes demo",
+  "name": "Pipes game demo",
   "icons": [
     {
       "src": "favicon.ico",
