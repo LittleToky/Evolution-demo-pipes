@@ -9,7 +9,7 @@ https://perfect-celery.surge.sh/
 - yarn
 - yarn start
 
-##What used
+## What used
 
 - React
 - TypeScript
