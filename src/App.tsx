@@ -72,7 +72,7 @@ function App() {
         // console.log(data);
         // console.log(linesFromState);
         resetData();
-        sendMessage({ message, map });
+        sendMessage({ message: "map" });
       }
       // else {
       //   console.log('checked');
